@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { config } from "@/lib/config";
 
 interface DeleteButtonProps {
   id: number;
@@ -16,15 +17,13 @@ export default function DeleteButton({ id, endpoint, label = "العنصر" }: D
 
   const handleDelete = async () => {
     setLoading(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
 
     try {
-      await fetch(`${apiUrl}/${endpoint}/${id}`, { 
+      await fetch(`${config.apiUrl}/${endpoint}/${id}`, {
         method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${config.apiKey}`,
+        },
       });
       setConfirm(false);
       router.refresh();

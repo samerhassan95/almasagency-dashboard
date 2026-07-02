@@ -2,9 +2,11 @@ import { Inbox, Mail, Phone, User } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
+import { getApiUrl, getApiKey } from "@/lib/config";
+
 async function getSubmissions() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  const apiKey = process.env.ADMIN_API_KEY || 'almasa_secret_key_2025';
+  const apiUrl = getApiUrl();
+  const apiKey = getApiKey();
 
   try {
     const controller = new AbortController();

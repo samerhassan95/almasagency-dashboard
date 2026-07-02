@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Upload, Save, X } from "lucide-react";
+import { config } from "@/lib/config";
 
 interface BlogFormProps {
   initialData?: {
@@ -17,16 +18,6 @@ interface BlogFormProps {
   };
   mode: "create" | "edit";
 }
-
-const getFullImageUrl = (url: string) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
-    return url;
-  }
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  const mainDomain = apiUrl.replace('/api', '');
-  return `${mainDomain}${url}`;
-};
 
 export default function BlogForm({ initialData, mode }: BlogFormProps) {
   const router = useRouter();
@@ -55,22 +46,22 @@ export default function BlogForm({ initialData, mode }: BlogFormProps) {
     if (!file) return;
     setUploading(true);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
-
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`${apiUrl}/upload`, { 
-        method: "POST", 
+      const res = await fetch(`${config.apiUrl}/upload`, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          Authorization: `Bearer ${config.apiKey}`,
         },
-        body: fd 
+        body: fd,
       });
       const data = await res.json();
       if (data.success) {
-        setForm((prev) => ({ ...prev, image_url: data.url }));
+        setForm((prev) => ({
+          ...prev,
+          image_url: config.normalizeMediaPath(data.url),
+        }));
       } else {
         setAlert({ type: "error", msg: "فشل رفع الصورة" });
       }
@@ -87,24 +78,32 @@ export default function BlogForm({ initialData, mode }: BlogFormProps) {
     setLoading(true);
     setAlert(null);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
+    const payload = {
+      ...form,
+      image_url: config.normalizeMediaPath(form.image_url),
+    };
 
-    const url = mode === "edit" ? `${apiUrl}/blogs/${initialData?.id}` : `${apiUrl}/blogs`;
+    const url =
+      mode === "edit"
+        ? `${config.apiUrl}/blogs/${initialData?.id}`
+        : `${config.apiUrl}/blogs`;
     const method = mode === "edit" ? "PUT" : "POST";
 
     try {
       const res = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          Authorization: `Bearer ${config.apiKey}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
-        setAlert({ type: "success", msg: mode === "edit" ? "تم التحديث بنجاح!" : "تمت الإضافة بنجاح!" });
+        setAlert({
+          type: "success",
+          msg: mode === "edit" ? "تم التحديث بنجاح!" : "تمت الإضافة بنجاح!",
+        });
         setTimeout(() => {
           router.push("/admin/blogs");
           router.refresh();
@@ -126,27 +125,42 @@ export default function BlogForm({ initialData, mode }: BlogFormProps) {
         <div className={`admin-alert admin-alert--${alert.type}`}>{alert.msg}</div>
       )}
 
-      {/* Image Upload */}
       <div className="admin-form-group">
         <label className="admin-label">صورة المقال</label>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
-        <div className="admin-upload-zone" onClick={() => fileInputRef.current?.click()}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          style={{ display: "none" }}
+        />
+        <div
+          className="admin-upload-zone"
+          onClick={() => fileInputRef.current?.click()}
+        >
           {uploading ? (
             <p style={{ color: "#7c3aed" }}>جارٍ الرفع...</p>
           ) : form.image_url ? (
             <>
-              <img src={getFullImageUrl(form.image_url)} alt="preview" className="admin-upload-preview" />
-              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>اضغط لتغيير الصورة</p>
+              <img
+                src={config.getFullImageUrl(form.image_url)}
+                alt="preview"
+                className="admin-upload-preview"
+              />
+              <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+                اضغط لتغيير الصورة
+              </p>
             </>
           ) : (
             <>
               <Upload size={32} style={{ color: "#9ca3af", margin: "0 auto 8px" }} />
               <p style={{ color: "#6b7280", fontSize: 14 }}>اضغط لرفع صورة المقال</p>
-              <p style={{ color: "#9ca3af", fontSize: 12 }}>JPG, PNG, WebP — حد أقصى 5MB</p>
+              <p style={{ color: "#9ca3af", fontSize: 12 }}>
+                JPG, PNG, WebP — حد أقصى 5MB
+              </p>
             </>
           )}
         </div>
-        {/* Or paste URL */}
         <input
           type="text"
           name="image_url"
@@ -158,58 +172,111 @@ export default function BlogForm({ initialData, mode }: BlogFormProps) {
         />
       </div>
 
-      {/* Titles */}
-      <div className="admin-section-divider"><span>العنوان</span></div>
+      <div className="admin-section-divider">
+        <span>العنوان</span>
+      </div>
       <div className="admin-form-row">
         <div className="admin-form-group">
           <label className="admin-label">
             العنوان <span className="admin-label-lang admin-label-lang--ar">عربي</span>
           </label>
-          <input name="title_ar" value={form.title_ar} onChange={handleChange} required className="admin-input" placeholder="عنوان المقال بالعربية" dir="rtl" />
+          <input
+            name="title_ar"
+            value={form.title_ar}
+            onChange={handleChange}
+            required
+            className="admin-input"
+            placeholder="عنوان المقال بالعربية"
+            dir="rtl"
+          />
         </div>
         <div className="admin-form-group">
           <label className="admin-label">
             Title <span className="admin-label-lang admin-label-lang--en">EN</span>
           </label>
-          <input name="title_en" value={form.title_en} onChange={handleChange} required className="admin-input" placeholder="Blog post title in English" dir="ltr" />
+          <input
+            name="title_en"
+            value={form.title_en}
+            onChange={handleChange}
+            required
+            className="admin-input"
+            placeholder="Blog post title in English"
+            dir="ltr"
+          />
         </div>
       </div>
 
-      {/* Subtitles */}
-      <div className="admin-section-divider"><span>العنوان الفرعي</span></div>
+      <div className="admin-section-divider">
+        <span>العنوان الفرعي</span>
+      </div>
       <div className="admin-form-row">
         <div className="admin-form-group">
           <label className="admin-label">
-            العنوان الفرعي <span className="admin-label-lang admin-label-lang--ar">عربي</span>
+            العنوان الفرعي{" "}
+            <span className="admin-label-lang admin-label-lang--ar">عربي</span>
           </label>
-          <input name="subtitle_ar" value={form.subtitle_ar} onChange={handleChange} className="admin-input" placeholder="ملخص قصير للمقال" dir="rtl" />
+          <input
+            name="subtitle_ar"
+            value={form.subtitle_ar}
+            onChange={handleChange}
+            className="admin-input"
+            placeholder="ملخص قصير للمقال"
+            dir="rtl"
+          />
         </div>
         <div className="admin-form-group">
           <label className="admin-label">
             Subtitle <span className="admin-label-lang admin-label-lang--en">EN</span>
           </label>
-          <input name="subtitle_en" value={form.subtitle_en} onChange={handleChange} className="admin-input" placeholder="Short article summary" dir="ltr" />
+          <input
+            name="subtitle_en"
+            value={form.subtitle_en}
+            onChange={handleChange}
+            className="admin-input"
+            placeholder="Short article summary"
+            dir="ltr"
+          />
         </div>
       </div>
 
-      {/* Content */}
-      <div className="admin-section-divider"><span>المحتوى الكامل</span></div>
+      <div className="admin-section-divider">
+        <span>المحتوى الكامل</span>
+      </div>
       <div className="admin-form-group">
         <label className="admin-label">
           المحتوى الكامل <span className="admin-label-lang admin-label-lang--ar">عربي</span>
         </label>
-        <p style={{ fontSize: 12, color: "#9ca3af" }}>استخدم ## للعناوين الفرعية، واتركسطر فارغ بين الفقرات</p>
-        <textarea name="content_ar" value={form.content_ar} onChange={handleChange} required className="admin-textarea admin-textarea--lg" placeholder="اكتب محتوى المقال بالعربية هنا..." dir="rtl" />
+        <p style={{ fontSize: 12, color: "#9ca3af" }}>
+          استخدم ## للعناوين الفرعية، واتركسطر فارغ بين الفقرات
+        </p>
+        <textarea
+          name="content_ar"
+          value={form.content_ar}
+          onChange={handleChange}
+          required
+          className="admin-textarea admin-textarea--lg"
+          placeholder="اكتب محتوى المقال بالعربية هنا..."
+          dir="rtl"
+        />
       </div>
       <div className="admin-form-group">
         <label className="admin-label">
           Full Content <span className="admin-label-lang admin-label-lang--en">EN</span>
         </label>
-        <p style={{ fontSize: 12, color: "#9ca3af" }}>Use ## for subheadings, leave blank line between paragraphs</p>
-        <textarea name="content_en" value={form.content_en} onChange={handleChange} required className="admin-textarea admin-textarea--lg" placeholder="Write the full blog content in English here..." dir="ltr" />
+        <p style={{ fontSize: 12, color: "#9ca3af" }}>
+          Use ## for subheadings, leave blank line between paragraphs
+        </p>
+        <textarea
+          name="content_en"
+          value={form.content_en}
+          onChange={handleChange}
+          required
+          className="admin-textarea admin-textarea--lg"
+          placeholder="Write the full blog content in English here..."
+          dir="ltr"
+        />
       </div>
 
-      {/* Actions */}
       <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
         <Link href="/admin/blogs" className="admin-btn admin-btn--outline">
           <X size={16} /> إلغاء

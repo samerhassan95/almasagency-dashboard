@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Save, Phone, Mail, MapPin, Link2 } from "lucide-react";
+import { config } from "@/lib/config";
 
 export default function AdminContactPage() {
   const [form, setForm] = useState({
@@ -13,13 +14,10 @@ export default function AdminContactPage() {
   const [alert, setAlert] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
-
-    fetch(`${apiUrl}/contact`, {
+    fetch(`${config.apiUrl}/contact`, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
+        Authorization: `Bearer ${config.apiKey}`,
+      },
     })
       .then(r => r.json())
       .then(data => {
@@ -47,17 +45,14 @@ export default function AdminContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setAlert(null);
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
-
     try {
-      const res = await fetch(`${apiUrl}/contact`, { 
-        method: "PUT", 
-        headers: { 
+      const res = await fetch(`${config.apiUrl}/contact`, {
+        method: "PUT",
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        }, 
-        body: JSON.stringify(form) 
+          Authorization: `Bearer ${config.apiKey}`,
+        },
+        body: JSON.stringify(form),
       });
       const data = await res.json(); 
       setAlert(data.success ? { type: "success", msg: "تم حفظ بيانات التواصل بنجاح!" } : { type: "error", msg: "حدث خطأ أثناء الحفظ" });

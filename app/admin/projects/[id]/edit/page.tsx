@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import ProjectForm from "../../../_components/ProjectForm";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { getApiUrl, getApiKey } from "@/lib/config";
 
 export const dynamic = 'force-dynamic';
 
 async function getProject(id: string) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  const apiKey = process.env.ADMIN_API_KEY || 'almasa_secret_key_2025';
+  const apiUrl = getApiUrl();
+  const apiKey = getApiKey();
 
   try {
     const controller = new AbortController();

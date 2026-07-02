@@ -68,7 +68,7 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
         body: fd 
       });
       const data = await res.json();
-      if (data.success) setForm((p) => ({ ...p, image_url: data.url }));
+      if (data.success) setForm((p) => ({ ...p, image_url: config.normalizeMediaPath(data.url) }));
       else setAlert({ type: "error", msg: "فشل رفع الصورة" });
     } catch (error) {
       console.error(error);
@@ -92,7 +92,7 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
         body: fd 
       });
       const data = await res.json();
-      if (data.success) setForm((p) => ({ ...p, pdf_url: data.url }));
+      if (data.success) setForm((p) => ({ ...p, pdf_url: config.normalizeMediaPath(data.url) }));
       else setAlert({ type: "error", msg: "فشل رفع ملف PDF" });
     } catch (error) {
       console.error(error);
@@ -106,6 +106,11 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
     e.preventDefault(); setLoading(true); setAlert(null);
 
     const url = mode === "edit" ? `${config.apiUrl}/projects/${initialData?.id}` : `${config.apiUrl}/projects`;
+    const payload = {
+      ...form,
+      image_url: config.normalizeMediaPath(form.image_url),
+      pdf_url: config.normalizeMediaPath(form.pdf_url),
+    };
     
     try {
       const res = await fetch(url, {
@@ -114,7 +119,7 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${config.apiKey}`
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json(); 
       if (data.success) { 
@@ -155,7 +160,7 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
           {uploadingPdf ? <p style={{ color: "#7c3aed" }}>جارٍ رفع ملف PDF...</p>
             : form.pdf_url ? (
               <>
-                <p style={{ fontSize: 14, color: "#111" }}>PDF مرفوع: <a href={form.pdf_url} target="_blank" rel="noreferrer" className="font-semibold underline">عرض / تحميل</a></p>
+                <p style={{ fontSize: 14, color: "#111" }}>PDF مرفوع: <a href={config.getFullImageUrl(form.pdf_url)} target="_blank" rel="noreferrer" className="font-semibold underline">عرض / تحميل</a></p>
                 <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>اضغط لتغيير الملف</p>
               </>
             ) : (

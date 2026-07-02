@@ -22,16 +22,23 @@ function parseSession(value: string) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/_next") || pathname.startsWith("/api/auth") || pathname === "/login") {
+  if (pathname.startsWith("/_next") || pathname.startsWith("/api/auth")) {
+    return NextResponse.next();
+  }
+
+  const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = sessionValue ? parseSession(sessionValue) : null;
+
+  if (pathname === "/login") {
+    if (session) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
     return NextResponse.next();
   }
 
   if (!isAdminRoute(pathname)) {
     return NextResponse.next();
   }
-
-  const sessionValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = sessionValue ? parseSession(sessionValue) : null;
 
   if (!session) {
     const response = NextResponse.redirect(new URL("/login", request.url));

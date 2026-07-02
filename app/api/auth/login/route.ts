@@ -23,13 +23,6 @@ async function validateAdmin(email: string, password: string) {
     return true;
   }
 
-  const envEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const envPassword = process.env.ADMIN_PASSWORD?.trim();
-
-  if (envEmail && envPassword && email === envEmail && password === envPassword) {
-    return true;
-  }
-
   return false;
 }
 

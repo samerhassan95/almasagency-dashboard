@@ -45,6 +45,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
           subtitle_ar: project.subtitle_ar || "", subtitle_en: project.subtitle_en || "",
           description_ar: project.description_ar, description_en: project.description_en,
           image_url: project.image_url || "",
+          pdf_url: project.pdf_url || "",
         }} />
       </div></div>
     </div>

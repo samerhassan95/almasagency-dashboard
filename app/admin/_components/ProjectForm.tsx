@@ -12,6 +12,7 @@ interface ProjectFormProps {
     subtitle_ar?: string; subtitle_en?: string;
     description_ar: string; description_en: string;
     image_url?: string;
+    pdf_url?: string;
   };
   mode: "create" | "edit";
 }
@@ -51,9 +52,11 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
     description_ar: initialData?.description_ar || "",
     description_en: initialData?.description_en || "",
     image_url: initialData?.image_url || "",
+    pdf_url: initialData?.pdf_url || "",
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [alert, setAlert] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -83,6 +86,33 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
       setAlert({ type: "error", msg: "حدث خطأ أثناء رفع الصورة" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setUploadingPdf(true);
+    
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
+
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const res = await fetch(`${apiUrl}/upload`, { 
+        method: "POST", 
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: fd 
+      });
+      const data = await res.json();
+      if (data.success) setForm((p) => ({ ...p, pdf_url: data.url }));
+      else setAlert({ type: "error", msg: "فشل رفع ملف PDF" });
+    } catch (error) {
+      console.error(error);
+      setAlert({ type: "error", msg: "حدث خطأ أثناء رفع ملف PDF" });
+    } finally {
+      setUploadingPdf(false);
     }
   };
 
@@ -133,6 +163,23 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
             : (<><Upload size={32} style={{ color: "#9ca3af", margin: "0 auto 8px" }} /><p style={{ color: "#6b7280", fontSize: 14 }}>اضغط لرفع صورة</p></>)}
         </div>
         <input type="text" name="image_url" placeholder="أو الصق رابط الصورة..." value={form.image_url} onChange={handleChange} className="admin-input" style={{ marginTop: 8 }} />
+      </div>
+
+      <div className="admin-form-group">
+        <label className="admin-label">ملف PDF للمشروع</label>
+        <input ref={pdfInputRef} type="file" accept=".pdf" onChange={handlePdfUpload} style={{ display: "none" }} />
+        <div className="admin-upload-zone" onClick={() => pdfInputRef.current?.click()}>
+          {uploadingPdf ? <p style={{ color: "#7c3aed" }}>جارٍ رفع ملف PDF...</p>
+            : form.pdf_url ? (
+              <>
+                <p style={{ fontSize: 14, color: "#111" }}>PDF مرفوع: <a href={form.pdf_url} target="_blank" rel="noreferrer" className="font-semibold underline">عرض / تحميل</a></p>
+                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>اضغط لتغيير الملف</p>
+              </>
+            ) : (
+              <><Upload size={32} style={{ color: "#9ca3af", margin: "0 auto 8px" }} /><p style={{ color: "#6b7280", fontSize: 14 }}>اضغط لرفع ملف PDF</p></>)
+          }
+        </div>
+        <input type="text" name="pdf_url" placeholder="أو الصق رابط PDF..." value={form.pdf_url} onChange={handleChange} className="admin-input" style={{ marginTop: 8 }} />
       </div>
 
       <div className="admin-form-group" style={{ maxWidth: 260 }}>

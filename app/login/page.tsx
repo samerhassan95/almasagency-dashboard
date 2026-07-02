@@ -31,6 +31,9 @@ export default function LoginPage() {
       }
 
       router.push("/admin");
+      if (typeof window !== "undefined") {
+        window.location.href = "/admin";
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {

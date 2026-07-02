@@ -7,7 +7,7 @@ import "../admin/admin.css";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -53,16 +53,16 @@ export default function LoginPage() {
 
         <form className="admin-login-form" onSubmit={handleSubmit}>
           <div className="admin-login-field">
-            <label className="admin-label" htmlFor="username">
-              <Mail size={15} /> اسم المستخدم
+            <label className="admin-label" htmlFor="email">
+              <Mail size={15} /> البريد الإلكتروني
             </label>
             <input
-              id="username"
+              id="email"
               className="admin-input"
-              type="text"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="admin"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="admin@almasa.com"
               required
             />
           </div>

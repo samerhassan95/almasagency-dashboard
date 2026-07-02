@@ -30,6 +30,7 @@ const getFullImageUrl = (url: string) => {
 export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   
   // Format initial ISO date to YYYY-MM-DD
   const formatInitialDate = (d?: string) => {

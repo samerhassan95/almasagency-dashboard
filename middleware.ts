@@ -9,7 +9,7 @@ function isAdminRoute(pathname: string) {
 function parseSession(value: string) {
   try {
     const payload = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
-    if (!payload?.username || typeof payload.exp !== "number") {
+    if ((!payload?.username && !payload?.email) || typeof payload.exp !== "number") {
       return null;
     }
 

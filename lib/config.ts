@@ -1,20 +1,23 @@
 const PRODUCTION_API_URL = "https://almasagency.com/api";
 const PRODUCTION_SITE_URL = "https://almasagency.com";
 
-/** API base URL — works in server components and client components */
-export function getApiUrl(): string {
+function isLocalDev(): boolean {
   if (typeof window !== "undefined") {
-    return window.location.hostname === "localhost"
-      ? "http://localhost:3000/api"
-      : process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
+    return window.location.hostname === "localhost";
   }
-  return process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
+  return process.env.NODE_ENV === "development";
+}
+
+/** API base URL — always production on deployed admin, localhost only in dev */
+export function getApiUrl(): string {
+  if (isLocalDev()) return "http://localhost:3000/api";
+  return PRODUCTION_API_URL;
 }
 
 /** Main site origin (no /api suffix) */
 export function getSiteUrl(): string {
-  const fromApi = getApiUrl().replace(/\/api\/?$/, "");
-  return fromApi || PRODUCTION_SITE_URL;
+  if (isLocalDev()) return "http://localhost:3000";
+  return PRODUCTION_SITE_URL;
 }
 
 export function getApiKey(): string {
@@ -28,7 +31,17 @@ export function getApiKey(): string {
 /** Normalize stored media paths to /uploads/file.ext */
 export function normalizeMediaPath(url: string): string {
   if (!url) return "";
-  const trimmed = url.trim();
+  let trimmed = url.trim();
+
+  // Rewrite legacy admin-domain URLs to relative paths
+  if (trimmed.includes("admin.almasagency.com")) {
+    try {
+      trimmed = new URL(trimmed).pathname;
+    } catch {
+      trimmed = trimmed.replace(/^https?:\/\/admin\.almasagency\.com/, "");
+    }
+  }
+
   if (
     trimmed.startsWith("http://") ||
     trimmed.startsWith("https://") ||
@@ -36,6 +49,7 @@ export function normalizeMediaPath(url: string): string {
   ) {
     return trimmed.replace(/\/+$/, "");
   }
+
   const withoutTrailing = trimmed.replace(/\/+$/, "");
   return withoutTrailing.startsWith("/")
     ? withoutTrailing
@@ -45,14 +59,28 @@ export function normalizeMediaPath(url: string): string {
 /** Build full URL for preview/display from admin (files live on main site) */
 export function getFullMediaUrl(url: string): string {
   if (!url) return "";
-  const trimmed = url.trim();
+  let trimmed = url.trim();
+
   if (
     trimmed.startsWith("http://") ||
     trimmed.startsWith("https://") ||
     trimmed.startsWith("data:")
   ) {
+    // Rewrite admin-domain or localhost URLs to main site
+    if (
+      trimmed.includes("admin.almasagency.com") ||
+      trimmed.includes("localhost")
+    ) {
+      try {
+        const path = new URL(trimmed).pathname;
+        return `${getSiteUrl()}${normalizeMediaPath(path)}`;
+      } catch {
+        /* fall through */
+      }
+    }
     return trimmed.replace(/\/+$/, "");
   }
+
   return `${getSiteUrl()}${normalizeMediaPath(trimmed)}`;
 }
 

@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Upload, Save, X } from "lucide-react";
+import { config } from "@/lib/config";
 
 interface ProjectFormProps {
   initialData?: {
@@ -16,16 +17,6 @@ interface ProjectFormProps {
   };
   mode: "create" | "edit";
 }
-
-const getFullImageUrl = (url: string) => {
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
-    return url;
-  }
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  const mainDomain = apiUrl.replace('/api', '');
-  return `${mainDomain}${url}`;
-};
 
 export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const router = useRouter();
@@ -66,16 +57,13 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     setUploading(true);
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
 
     try {
       const fd = new FormData(); fd.append("file", file);
-      const res = await fetch(`${apiUrl}/upload`, { 
+      const res = await fetch(`${config.apiUrl}/upload`, { 
         method: "POST", 
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${config.apiKey}`
         },
         body: fd 
       });
@@ -93,16 +81,13 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     setUploadingPdf(true);
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
 
     try {
       const fd = new FormData(); fd.append("file", file);
-      const res = await fetch(`${apiUrl}/upload`, { 
+      const res = await fetch(`${config.apiUrl}/upload`, { 
         method: "POST", 
         headers: {
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${config.apiKey}`
         },
         body: fd 
       });
@@ -119,18 +104,15 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setAlert(null);
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-    const apiKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || 'almasa_secret_key_2025';
 
-    const url = mode === "edit" ? `${apiUrl}/projects/${initialData?.id}` : `${apiUrl}/projects`;
+    const url = mode === "edit" ? `${config.apiUrl}/projects/${initialData?.id}` : `${config.apiUrl}/projects`;
     
     try {
       const res = await fetch(url, {
         method: mode === "edit" ? "PUT" : "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Authorization": `Bearer ${config.apiKey}`
         },
         body: JSON.stringify(form),
       });
@@ -160,7 +142,7 @@ export default function ProjectForm({ initialData, mode }: ProjectFormProps) {
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
         <div className="admin-upload-zone" onClick={() => fileInputRef.current?.click()}>
           {uploading ? <p style={{ color: "#7c3aed" }}>جارٍ الرفع...</p>
-            : form.image_url ? (<><img src={getFullImageUrl(form.image_url)} alt="preview" className="admin-upload-preview" /><p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>اضغط لتغيير</p></>)
+            : form.image_url ? (<><img src={config.getFullImageUrl(form.image_url)} alt="preview" className="admin-upload-preview" /><p style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>اضغط لتغيير</p></>)
             : (<><Upload size={32} style={{ color: "#9ca3af", margin: "0 auto 8px" }} /><p style={{ color: "#6b7280", fontSize: 14 }}>اضغط لرفع صورة</p></>)}
         </div>
         <input type="text" name="image_url" placeholder="أو الصق رابط الصورة..." value={form.image_url} onChange={handleChange} className="admin-input" style={{ marginTop: 8 }} />

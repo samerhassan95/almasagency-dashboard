@@ -30,8 +30,7 @@ export default function LoginPage() {
         throw new Error(data.message || "فشل تسجيل الدخول");
       }
 
-      router.replace("/admin");
-      router.refresh();
+      router.push("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {

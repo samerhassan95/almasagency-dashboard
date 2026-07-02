@@ -15,3 +15,74 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Project {
+  id             Int      @id @default(autoincrement())
+  date           String?
+  title_ar       String
+  title_en       String
+  subtitle_ar    String?
+  subtitle_en    String?
+  description_ar String   @db.Text
+  description_en String   @db.Text
+  image_url      String?
+  pdf_url        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("project")
+}
+
+model Service {
+  id             Int      @id @default(autoincrement())
+  title_ar       String
+  title_en       String
+  description_ar String   @db.Text
+  description_en String   @db.Text
+  image_url      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("service")
+}
+
+model ContactInfo {
+  id          Int      @id @default(autoincrement())
+  phone       String?
+  email       String?
+  location_ar String?
+  location_en String?
+  facebook    String?
+  instagram   String?
+  linkedin    String?
+  dribbble    String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("contactinfo")
+}
+
+model Submission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("submission")
+}
+
+model Blog {
+  id          Int      @id @default(autoincrement())
+  title_ar    String
+  title_en    String
+  subtitle_ar String?
+  subtitle_en String?
+  content_ar  String   @db.Text
+  content_en  String   @db.Text
+  image_url   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("blog")
+}

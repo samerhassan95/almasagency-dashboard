@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
@@ -26,7 +26,12 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+
+  function handleLogout() {
+    router.push("/api/auth/logout");
+  }
 
   return (
     <>
@@ -72,10 +77,10 @@ export default function AdminSidebar() {
 
         {/* Footer */}
         <div className="admin-sidebar__footer">
-          <a href="http://localhost:3000" className="admin-nav-item">
+          <button type="button" onClick={handleLogout} className="admin-nav-item">
             <LogOut size={20} />
-            {!collapsed && <span>الخروج للموقع</span>}
-          </a>
+            {!collapsed && <span>تسجيل الخروج</span>}
+          </button>
         </div>
       </aside>
     </>
